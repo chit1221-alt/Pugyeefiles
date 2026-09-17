@@ -1,0 +1,89 @@
+name: PugyeeFiles Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: 17
+
+      - name: Set up NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r28c
+          link-to-sdk: true
+          local-cache: true
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            file_operations/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Setup Rust for Android
+        run: |
+          cd file_operations
+          chmod +x setup_rust_android.sh
+          ./setup_rust_android.sh
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_B64 }}" | base64 --decode > app/pugyeefiles.jks
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build signed release APK
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          arguments: assembleFdroidRelease
+        env:
+          SIGNING_STORE_FILE: pugyeefiles.jks
+          SIGNING_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
+
+      - name: Sign APK explicitly
+        run: |
+          APK=$(find app/build/outputs/apk/fdroid/release/ -name "*.apk" | head -1)
+          echo "Found APK: $APK"
+          $JAVA_HOME/bin/jarsigner \
+            -verbose \
+            -sigalg SHA256withRSA \
+            -digestalg SHA-256 \
+            -keystore app/pugyeefiles.jks \
+            -storepass ${{ secrets.KEYSTORE_STORE_PASSWORD }} \
+            -keypass ${{ secrets.KEYSTORE_KEY_PASSWORD }} \
+            "$APK" \
+            ${{ secrets.KEYSTORE_ALIAS }}
+          # Rename for clarity
+          mv "$APK" app/build/outputs/apk/fdroid/release/PugyeeFiles-release.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PugyeeFiles-release
+          path: app/build/outputs/apk/fdroid/release/PugyeeFiles-release.apk
+          retention-days: 30
