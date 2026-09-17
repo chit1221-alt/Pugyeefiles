@@ -17,10 +17,10 @@ jobs:
           distribution: "temurin"
           java-version: 17
 
-      - name: Set up NDK
+      - name: Set up NDK r26d
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r28c
+          ndk-version: r26d
           link-to-sdk: true
           local-cache: true
 
@@ -38,9 +38,9 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             file_operations/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-r26d-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-r26d-
 
       - name: Setup Rust for Android
         run: |
