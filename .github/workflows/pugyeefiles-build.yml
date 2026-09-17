@@ -55,12 +55,11 @@ jobs:
 
       - name: Write signing config
         run: |
-          cat >> gradle.properties << EOF
-          RELEASE_STORE_FILE=${{ github.workspace }}/pugyeefiles.jks
-          RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_STORE_PASSWORD }}
-          RELEASE_KEY_ALIAS=${{ secrets.KEYSTORE_ALIAS }}
-          RELEASE_KEY_PASSWORD=${{ secrets.KEYSTORE_KEY_PASSWORD }}
-          EOF
+          echo "RELEASE_STORE_FILE=${{ github.workspace }}/pugyeefiles.jks" >> gradle.properties
+          echo "RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_STORE_PASSWORD }}" >> gradle.properties
+          echo "RELEASE_KEY_ALIAS=${{ secrets.KEYSTORE_ALIAS }}" >> gradle.properties
+          echo "RELEASE_KEY_PASSWORD=${{ secrets.KEYSTORE_KEY_PASSWORD }}" >> gradle.properties
+          echo "Signing config written."
 
       - name: Make gradlew executable
         run: chmod +x gradlew
@@ -70,11 +69,6 @@ jobs:
 
       - name: Build signed release APK
         run: ./gradlew assembleFdroidRelease --stacktrace
-        env:
-          RELEASE_STORE_FILE: ${{ github.workspace }}/pugyeefiles.jks
-          RELEASE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
