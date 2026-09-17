@@ -50,7 +50,17 @@ jobs:
 
       - name: Decode keystore
         run: |
-          echo "${{ secrets.KEYSTORE_B64 }}" | base64 --decode > app/pugyeefiles.jks
+          echo "${{ secrets.KEYSTORE_B64 }}" | base64 --decode > ${{ github.workspace }}/pugyeefiles.jks
+          echo "Keystore size: $(wc -c < ${{ github.workspace }}/pugyeefiles.jks) bytes"
+
+      - name: Write signing config
+        run: |
+          cat >> gradle.properties << EOF
+          RELEASE_STORE_FILE=${{ github.workspace }}/pugyeefiles.jks
+          RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS=${{ secrets.KEYSTORE_ALIAS }}
+          RELEASE_KEY_PASSWORD=${{ secrets.KEYSTORE_KEY_PASSWORD }}
+          EOF
 
       - name: Make gradlew executable
         run: chmod +x gradlew
@@ -59,12 +69,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build signed release APK
-        run: |
-          ./gradlew assembleFdroidRelease \
-            -Pandroid.injected.signing.store.file=$(pwd)/app/pugyeefiles.jks \
-            -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_STORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.KEYSTORE_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.KEYSTORE_KEY_PASSWORD }}
+        run: ./gradlew assembleFdroidRelease --stacktrace
+        env:
+          RELEASE_STORE_FILE: ${{ github.workspace }}/pugyeefiles.jks
+          RELEASE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
