@@ -55,35 +55,20 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Build signed release APK
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          arguments: assembleFdroidRelease
-        env:
-          SIGNING_STORE_FILE: pugyeefiles.jks
-          SIGNING_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
 
-      - name: Sign APK explicitly
+      - name: Build signed release APK
         run: |
-          APK=$(find app/build/outputs/apk/fdroid/release/ -name "*.apk" | head -1)
-          echo "Found APK: $APK"
-          $JAVA_HOME/bin/jarsigner \
-            -verbose \
-            -sigalg SHA256withRSA \
-            -digestalg SHA-256 \
-            -keystore app/pugyeefiles.jks \
-            -storepass ${{ secrets.KEYSTORE_STORE_PASSWORD }} \
-            -keypass ${{ secrets.KEYSTORE_KEY_PASSWORD }} \
-            "$APK" \
-            ${{ secrets.KEYSTORE_ALIAS }}
-          # Rename for clarity
-          mv "$APK" app/build/outputs/apk/fdroid/release/PugyeeFiles-release.apk
+          ./gradlew assembleFdroidRelease \
+            -Pandroid.injected.signing.store.file=$(pwd)/app/pugyeefiles.jks \
+            -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_STORE_PASSWORD }} \
+            -Pandroid.injected.signing.key.alias=${{ secrets.KEYSTORE_ALIAS }} \
+            -Pandroid.injected.signing.key.password=${{ secrets.KEYSTORE_KEY_PASSWORD }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: PugyeeFiles-release
-          path: app/build/outputs/apk/fdroid/release/PugyeeFiles-release.apk
+          path: app/build/outputs/apk/fdroid/release/*.apk
           retention-days: 30
