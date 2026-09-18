@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:fillViewport="true" android:background="#F5FAF9">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="24dp">
+        <Button android:id="@+id/mcp_back" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mcp_back" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_title" android:textSize="26sp" android:textColor="#17232C" android:textStyle="bold" android:layout_marginTop="16dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_intro" android:textSize="16sp" android:layout_marginTop="12dp" />
+        <TextView android:id="@+id/mcp_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_stopped" android:textColor="#126B55" android:textSize="18sp" android:textStyle="bold" android:accessibilityLiveRegion="polite" android:layout_marginTop="16dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_folder_label" android:textSize="20sp" android:textStyle="bold" android:layout_marginTop="24dp" />
+        <TextView android:id="@+id/mcp_folder" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_no_folder" android:textSize="16sp" />
+        <Button android:id="@+id/mcp_choose_folder" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_choose_folder" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_tunnel_label" android:textSize="20sp" android:textStyle="bold" android:layout_marginTop="24dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_tunnel_help" android:textSize="16sp" />
+        <Button android:id="@+id/mcp_copy_command" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_copy_command" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@id/mcp_origin" android:text="@string/mcp_url_label" />
+        <EditText android:id="@+id/mcp_origin" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:hint="@string/mcp_url_hint" android:inputType="textUri" android:singleLine="true" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_owner_label" android:textSize="20sp" android:textStyle="bold" android:layout_marginTop="24dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_owner_help" android:textSize="16sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@id/mcp_profile" android:text="@string/mcp_profile_label" />
+        <EditText android:id="@+id/mcp_profile" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:hint="@string/mcp_profile_hint" android:inputType="textPersonName" android:singleLine="true" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@id/mcp_password" android:text="@string/mcp_password_label" />
+        <EditText android:id="@+id/mcp_password" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:hint="@string/mcp_password_hint" android:inputType="textPassword" android:singleLine="true" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@id/mcp_confirm_password" android:text="@string/mcp_confirm_password_label" />
+        <EditText android:id="@+id/mcp_confirm_password" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:hint="@string/mcp_password_hint" android:inputType="textPassword" android:singleLine="true" />
+        <CheckBox android:id="@+id/mcp_allow_conversion" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/mcp_allow_conversion" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_access_help" android:textSize="16sp" />
+        <Button android:id="@+id/mcp_start" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_start" />
+        <Button android:id="@+id/mcp_stop" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_stop" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_connect_label" android:textSize="20sp" android:textStyle="bold" android:layout_marginTop="24dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_connect_help" android:textSize="16sp" />
+        <Button android:id="@+id/mcp_copy_url" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_copy_url" />
+        <Button android:id="@+id/mcp_reset_connections" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_reset_connections" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_requests_label" android:textSize="18sp" android:textStyle="bold" android:layout_marginTop="16dp" />
+        <LinearLayout android:id="@+id/mcp_requests" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_convert_label" android:textSize="20sp" android:textStyle="bold" android:layout_marginTop="32dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_conversion_help" android:textSize="16sp" />
+        <Button android:id="@+id/mcp_choose_source" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_choose_source" />
+        <TextView android:id="@+id/mcp_source" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_no_file" android:textSize="16sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_format_label" android:labelFor="@id/mcp_format" android:layout_marginTop="12dp" />
+        <Spinner android:id="@+id/mcp_format" android:layout_width="match_parent" android:layout_height="48dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_destination_label" android:labelFor="@id/mcp_destination" />
+        <EditText android:id="@+id/mcp_destination" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:hint="@string/mcp_destination_hint" android:singleLine="true" android:inputType="text" />
+        <Button android:id="@+id/mcp_convert" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_convert" />
+        <TextView android:id="@+id/mcp_conversion_result" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:accessibilityLiveRegion="polite" />
+    </LinearLayout>
+</ScrollView>

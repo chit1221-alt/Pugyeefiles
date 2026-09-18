@@ -511,7 +511,7 @@
     <string name="channel_name_ftp">Amaze FTP zerbitzaria</string>
     <string name="channel_description_ftp">Amaze fitxategi-kudeatzailearen FTP zerbitzariaren jakinarazpenak</string>
 
-    <string name="appbar_name" translatable="false">Amaze</string>
+    <string name="appbar_name" translatable="false">PugyeeFiles</string>
     <string name="processing">Prozesatzen&#8230;</string>
     <string name="failed_no_connection">Huts egin du fitxategiak kargatzean. Egiaztatu zure konexioa.</string>
 

@@ -19,8 +19,8 @@ android {
         applicationId "com.amaze.filemanager"
         minSdkVersion libs.versions.minSdk.get().toInteger()
         targetSdkVersion libs.versions.targetSdk.get().toInteger()
-        versionCode 125
-        versionName "3.11.3"
+        versionCode 126
+        versionName "3.11.3-pugyee.1"
         multiDexEnabled true
 
         vectorDrawables.useSupportLibrary = true
@@ -248,6 +248,7 @@ dependencies {
     implementation project(':commons_compress_7z')
     implementation project(':file_operations')
     implementation project(':portscanner')
+    implementation project(':mcp_server')
 
     implementation libs.kotlin.stdlib.jdk8
     implementation libs.acra.core

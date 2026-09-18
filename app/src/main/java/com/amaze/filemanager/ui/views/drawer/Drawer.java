@@ -521,6 +521,20 @@ public class Drawer implements NavigationView.OnNavigationItemSelectedListener {
         menu,
         LASTGROUP,
         order++,
+        R.string.mcp_title,
+        new MenuMetadata(
+            () -> {
+              mainActivity.startActivity(
+                  new Intent(mainActivity, com.amaze.filemanager.pugyee.McpActivity.class));
+              closeIfNotLocked();
+            }),
+        R.drawable.ic_ftp_white_24dp,
+        null);
+
+    addNewItem(
+        menu,
+        LASTGROUP,
+        order++,
         R.string.ftp,
         new MenuMetadata(
             () -> {
