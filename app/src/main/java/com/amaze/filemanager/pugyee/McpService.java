@@ -20,6 +20,8 @@
 
 package com.amaze.filemanager.pugyee;
 
+import com.amaze.filemanager.R;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -34,9 +36,10 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
-import com.amaze.filemanager.R;
+
 import uk.pugyee.mcp.McpHttpServer;
 import uk.pugyee.mcp.McpProtocol;
 import uk.pugyee.mcp.OAuthManager;

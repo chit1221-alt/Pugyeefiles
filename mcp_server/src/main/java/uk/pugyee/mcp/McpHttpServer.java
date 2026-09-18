@@ -20,9 +20,6 @@
 
 package uk.pugyee.mcp;
 
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-import fi.iki.elonen.NanoHTTPD;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.URI;
@@ -39,6 +36,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+
+import fi.iki.elonen.NanoHTTPD;
 
 /** JSON-only Streamable HTTP, bound to loopback for a separately managed HTTPS tunnel. */
 public final class McpHttpServer extends NanoHTTPD {

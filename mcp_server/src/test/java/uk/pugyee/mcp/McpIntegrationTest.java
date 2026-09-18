@@ -22,7 +22,6 @@ package uk.pugyee.mcp;
 
 import static org.junit.Assert.*;
 
-import com.google.gson.JsonObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,9 +33,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.gson.JsonObject;
 
 public class McpIntegrationTest {
   private static final String ORIGIN = "https://phone.example";

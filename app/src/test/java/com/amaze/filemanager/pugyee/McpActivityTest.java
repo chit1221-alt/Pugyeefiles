@@ -23,11 +23,6 @@ package com.amaze.filemanager.pugyee;
 import static org.junit.Assert.*;
 import static org.robolectric.Shadows.shadowOf;
 
-import android.app.Application;
-import android.content.Context;
-import android.content.Intent;
-import android.widget.EditText;
-import com.amaze.filemanager.R;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,6 +33,13 @@ import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadows.ShadowToast;
+
+import com.amaze.filemanager.R;
+
+import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
+import android.widget.EditText;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28, application = Application.class)

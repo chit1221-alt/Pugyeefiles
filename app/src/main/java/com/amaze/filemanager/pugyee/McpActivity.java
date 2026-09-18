@@ -20,6 +20,12 @@
 
 package com.amaze.filemanager.pugyee;
 
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import com.amaze.filemanager.R;
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -42,12 +48,10 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
-import com.amaze.filemanager.R;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 import uk.pugyee.mcp.FileStore;
 import uk.pugyee.mcp.McpHttpServer;
 import uk.pugyee.mcp.OAuthManager;
