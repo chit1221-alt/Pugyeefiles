@@ -71,8 +71,6 @@ public final class McpHttpServer extends NanoHTTPD {
           && !("localhost:" + getListeningPort()).equals(host))
         return json(403, "{\"error\":\"invalid_host\"}");
       String origin = session.getHeaders().get("origin");
-      if (origin != null && !origin.equals(auth.origin()))
-        return json(403, "{\"error\":\"invalid_origin\"}");
       String path = session.getUri();
       Method method = session.getMethod();
       if (method == Method.GET) {

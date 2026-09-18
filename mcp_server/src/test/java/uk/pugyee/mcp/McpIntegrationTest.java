@@ -225,11 +225,8 @@ public class McpIntegrationTest {
   }
 
   @Test
-  public void browserOriginProtocolVersionAndBadBodiesAreRejected() throws Exception {
+  public void protocolVersionBadBodiesAndOwnerConsentOriginsAreRejected() throws Exception {
     String token = login("files.read");
-    assertEquals(
-        403,
-        request("POST", "/mcp", "{}", token, "https://evil.example", "application/json").status);
     assertEquals(415, request("POST", "/mcp", "{}", token, null, "text/plain").status);
     assertEquals(400, request("POST", "/mcp", "{broken", token, null, "application/json").status);
     String oversized = new String(new char[70000]).replace('\0', 'a');

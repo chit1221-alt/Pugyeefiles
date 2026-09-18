@@ -119,7 +119,7 @@ public class OAuthTest {
   }
 
   @Test
-  public void registrationRejectsUnsafeCallbacksAndHostRejectsInvalidOrigins() {
+  public void registrationRejectsUnsafeCallbacksAndHostOrigins() {
     for (String redirect :
         new String[] {
           "http://example.com",
