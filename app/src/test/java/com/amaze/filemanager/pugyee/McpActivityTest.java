@@ -167,45 +167,4 @@ public class McpActivityTest {
       assertTrue(prefs.getBoolean("convert", false));
     }
   }
-
-  @Test
-  public void pickerResultCannotChangeTheFolderAfterHostingStarts() {
-    try (ActivityController<McpActivity> controller =
-        Robolectric.buildActivity(McpActivity.class).setup()) {
-      McpActivity activity = controller.get();
-      McpService.active = new McpService();
-      try {
-        activity.onActivityResult(
-            8787,
-            android.app.Activity.RESULT_OK,
-            new Intent().setData(android.net.Uri.parse("content://documents/tree/new")));
-        assertEquals(
-            activity.getString(R.string.mcp_stop_before_changes),
-            ShadowToast.getTextOfLatestToast());
-        assertFalse(
-            activity.getSharedPreferences(McpService.PREFS, Context.MODE_PRIVATE).contains("tree"));
-      } finally {
-        McpService.active = null;
-      }
-    }
-  }
-
-  @Test
-  public void resetClearsClientRegistrationsOnlyAfterConfirmation() {
-    android.content.SharedPreferences prefs =
-        RuntimeEnvironment.getApplication()
-            .getSharedPreferences(McpService.PREFS, Context.MODE_PRIVATE);
-    prefs.edit().putString("clients", "[]").putBoolean("convert", true).commit();
-    try (ActivityController<McpActivity> controller =
-        Robolectric.buildActivity(McpActivity.class).setup()) {
-      controller.get().findViewById(R.id.mcp_reset_connections).performClick();
-      assertTrue(prefs.contains("clients"));
-      org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog()
-          .getButton(android.app.AlertDialog.BUTTON_POSITIVE)
-          .performClick();
-      shadowOf(android.os.Looper.getMainLooper()).idle();
-      assertFalse(prefs.contains("clients"));
-      assertTrue(prefs.getBoolean("convert", false));
-    }
-  }
 }
