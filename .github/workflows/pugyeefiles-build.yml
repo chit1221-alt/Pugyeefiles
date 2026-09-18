@@ -5,8 +5,7 @@ on:
   push:
     branches:
       - codex/fix-pugyeefiles-signing
-    paths:
-      - .github/workflows/pugyeefiles-build.yml
+      - codex/mcp-and-conversion
 
 permissions:
   contents: read
@@ -101,6 +100,12 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Test MCP and check formatting
+        run: ./gradlew :mcp_server:test spotlessCheck --stacktrace
+
+      - name: Test phone connection screen
+        run: ./gradlew :app:testFdroidDebugUnitTest --tests '*McpActivityTest' --stacktrace
 
       - name: Build signed release APK
         run: ./gradlew assembleFdroidRelease --stacktrace
