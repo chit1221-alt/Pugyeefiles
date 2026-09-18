@@ -20,12 +20,6 @@
 
 package com.amaze.filemanager.pugyee;
 
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import com.amaze.filemanager.R;
-
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -48,13 +42,16 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
-
+import com.amaze.filemanager.R;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import uk.pugyee.mcp.FileStore;
 import uk.pugyee.mcp.McpHttpServer;
 import uk.pugyee.mcp.OAuthManager;
+import uk.pugyee.mcp.OwnerCredentials;
 import uk.pugyee.mcp.TextConverter;
 
 public final class McpActivity extends Activity {
@@ -63,6 +60,9 @@ public final class McpActivity extends Activity {
   private final ExecutorService worker = Executors.newSingleThreadExecutor();
   private SharedPreferences prefs;
   private EditText origin;
+  private EditText profile;
+  private EditText password;
+  private EditText confirmPassword;
   private CheckBox conversions;
   private String source = "";
   private String pendingSignature = "";
@@ -92,6 +92,14 @@ public final class McpActivity extends Activity {
     prefs = getSharedPreferences(McpService.PREFS, MODE_PRIVATE);
     origin = findViewById(R.id.mcp_origin);
     origin.setText(prefs.getString("origin", ""));
+    profile = findViewById(R.id.mcp_profile);
+    profile.setText(prefs.getString("profile", ""));
+    password = findViewById(R.id.mcp_password);
+    confirmPassword = findViewById(R.id.mcp_confirm_password);
+    if (prefs.contains("password_hash")) {
+      password.setHint(R.string.mcp_password_unchanged);
+      confirmPassword.setHint(R.string.mcp_password_unchanged);
+    }
     conversions = findViewById(R.id.mcp_allow_conversion);
     conversions.setChecked(prefs.getBoolean("convert", false));
     Spinner target = findViewById(R.id.mcp_format);
@@ -216,11 +224,39 @@ public final class McpActivity extends Activity {
         toast(R.string.mcp_choose_folder_first);
         return;
       }
+      String ownerProfile = profile.getText().toString().trim();
+      String suppliedPassword = password.getText().toString();
+      String suppliedConfirmation = confirmPassword.getText().toString();
+      if (!OwnerCredentials.validProfile(ownerProfile)) {
+        toast(R.string.mcp_invalid_profile);
+        return;
+      }
+      String passwordHash = prefs.getString("password_hash", "");
+      if (!suppliedPassword.isEmpty()) {
+        if (!OwnerCredentials.validPassword(suppliedPassword)) {
+          toast(R.string.mcp_invalid_password);
+          return;
+        }
+        if (!suppliedPassword.equals(suppliedConfirmation)) {
+          toast(R.string.mcp_password_mismatch);
+          return;
+        }
+        passwordHash = OwnerCredentials.hash(suppliedPassword);
+      } else if (passwordHash.isEmpty()) {
+        toast(R.string.mcp_password_required);
+        return;
+      }
       prefs
           .edit()
           .putString("origin", address)
+          .putString("profile", ownerProfile)
+          .putString("password_hash", passwordHash)
           .putBoolean("convert", conversions.isChecked())
           .apply();
+      password.setText("");
+      confirmPassword.setText("");
+      password.setHint(R.string.mcp_password_unchanged);
+      confirmPassword.setHint(R.string.mcp_password_unchanged);
       if (Build.VERSION.SDK_INT >= 33
           && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
               != PackageManager.PERMISSION_GRANTED) {
@@ -239,6 +275,9 @@ public final class McpActivity extends Activity {
     TextView status = findViewById(R.id.mcp_status);
     status.setText(running ? getString(R.string.mcp_running) : getString(McpService.status));
     origin.setEnabled(!running);
+    profile.setEnabled(!running);
+    password.setEnabled(!running);
+    confirmPassword.setEnabled(!running);
     conversions.setEnabled(!running);
     findViewById(R.id.mcp_choose_folder).setEnabled(!running && !busy);
     findViewById(R.id.mcp_start).setEnabled(!running && !busy);

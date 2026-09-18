@@ -119,6 +119,26 @@ public class OAuthTest {
   }
 
   @Test
+  public void manuallyEnteredChatGptClientCanAuthorize() throws Exception {
+    Map<String, String> args = authorization();
+    args.put("client_id", "ChatGPT");
+    args.put("redirect_uri", "https://chatgpt.com/connector_platform_oauth_redirect");
+    OAuthManager.Pending pending = auth.authorize(args);
+    assertEquals("ChatGPT", pending.name);
+    auth.approve(pending.id);
+    Map<String, String> response =
+        McpHttpServer.form(new java.net.URI(auth.complete(pending.id)).getQuery());
+    Map<String, String> exchange = new HashMap<>();
+    exchange.put("grant_type", "authorization_code");
+    exchange.put("client_id", "ChatGPT");
+    exchange.put("redirect_uri", "https://chatgpt.com/connector_platform_oauth_redirect");
+    exchange.put("resource", auth.resource());
+    exchange.put("code", response.get("code"));
+    exchange.put("code_verifier", VERIFIER);
+    assertNotNull(auth.token(exchange).get("access_token"));
+  }
+
+  @Test
   public void registrationRejectsUnsafeCallbacksAndHostOrigins() {
     for (String redirect :
         new String[] {

@@ -11,6 +11,18 @@
     <string name="mcp_copy_command">Copy tunnel command</string>
     <string name="mcp_url_hint">https://your-tunnel-address</string>
     <string name="mcp_url_label">HTTPS tunnel address</string>
+    <string name="mcp_owner_label">Protect this connection</string>
+    <string name="mcp_owner_help">Choose a profile name and password. The connection page must sign in with both before a request reaches this phone. Phone approval is still required.</string>
+    <string name="mcp_profile_label">Profile name</string>
+    <string name="mcp_profile_hint">Your private sign-in name</string>
+    <string name="mcp_password_label">Password</string>
+    <string name="mcp_confirm_password_label">Confirm password</string>
+    <string name="mcp_password_hint">At least 8 characters</string>
+    <string name="mcp_password_unchanged">Leave blank to keep current password</string>
+    <string name="mcp_invalid_profile">Enter a profile name of 1 to 64 characters.</string>
+    <string name="mcp_invalid_password">Use a password of 8 to 128 characters.</string>
+    <string name="mcp_password_mismatch">The two passwords do not match.</string>
+    <string name="mcp_password_required">Create and confirm a password before starting.</string>
     <string name="mcp_allow_conversion">Allow AI to create converted copies</string>
     <string name="mcp_access_help">AI can list folders and read UTF-8 txt, md and json files up to 1 MiB. Conversion creates new copies. It cannot overwrite or delete originals. Stop ends access and revokes all active connections.</string>
     <string name="mcp_start">Start AI connection</string>
@@ -20,7 +32,7 @@
     <string name="mcp_notification">Sharing your chosen folder. Tap to approve connections or stop.</string>
     <string name="mcp_start_failed">Could not start. Check folder access, the HTTPS address, and that port 8787 is free.</string>
     <string name="mcp_connect_label">3. Add to ChatGPT</string>
-    <string name="mcp_connect_help">Copy the MCP address into a custom MCP connection in ChatGPT, using OAuth. When its approval page opens, return here. Approve only the request whose code matches that page, then return to the page and tap Continue. Keep this phone online. Hosting keeps this phone awake and uses battery. Stop it when you finish sharing. Restarting revokes active connections; reconnect ChatGPT afterwards.</string>
+    <string name="mcp_connect_help">Copy the MCP address into a custom MCP connection in ChatGPT, using OAuth. Sign in on the connection page with the profile and password set above. Then return here and approve only the request whose code matches that page. Return to the page and tap Continue. Keep this phone online. Hosting keeps this phone awake and uses battery. Stop it when you finish sharing. Restarting revokes active connections; reconnect ChatGPT afterwards.</string>
     <string name="mcp_copy_url">Copy MCP address</string>
     <string name="mcp_reset_connections">Reset saved connections</string>
     <string name="mcp_reset_explanation">Forget registered AI clients on this phone? Remove and recreate the MCP connection in ChatGPT afterwards. Your files are unaffected.</string>
@@ -50,5 +62,6 @@
     <string name="mcp_supported_formats">Choose a UTF-8 .txt, .md or .json file.</string>
     <string name="mcp_conversion_failed">Could not convert. Check that the source is valid UTF-8 text under 1 MiB, JSON is valid, and the destination name is unused.</string>
     <string name="mcp_copied">Copied</string>
+    <string name="mcp_login_html" formatted="false"><![CDATA[<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in to PugyeeFiles</title><style>body{font:18px system-ui;max-width:36rem;margin:3rem auto;padding:1rem;color:#17232c;background:#f5faf9}main{padding:1.5rem;background:white;border-radius:16px}label{display:block;margin:1rem 0 .25rem}input{box-sizing:border-box;width:100%;padding:.8rem;font-size:1rem}button{margin-top:1.25rem;padding:1rem 2rem;background:#126b55;color:white;border:0;border-radius:8px;font-size:1rem}.error{color:#a31515;font-weight:bold}</style><main><h1>Sign in to your phone</h1><p>This is the private PugyeeFiles profile on the phone hosting your files.</p><p class="error" role="alert">{{ERROR}}</p><form method="post" action="/authorize">{{FIELDS}}<label for="profile">Profile name</label><input id="profile" name="profile" autocomplete="username" required maxlength="64"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128"><button type="submit">Sign in</button></form></main></html>]]></string>
     <string name="mcp_consent_html" formatted="false"><![CDATA[<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Connect PugyeeFiles</title><style>body{font:18px system-ui;max-width:36rem;margin:3rem auto;padding:1rem;color:#17232c;background:#f5faf9}main{padding:1.5rem;background:white;border-radius:16px}code{font-size:2rem;font-weight:bold}button{padding:1rem 2rem;background:#126b55;color:white;border:0;border-radius:8px;font-size:1rem}small{overflow-wrap:anywhere}</style><main><h1>Connect to your phone</h1><p>Open PugyeeFiles → AI connection &amp; conversion on the phone hosting your files.</p><p>Approve only the request with this matching code:</p><p><code>{{CODE}}</code></p><p>Client: {{NAME}}</p><p>Requested access: {{SCOPE}}</p><p><small>Returns to: {{REDIRECT}}</small></p><p>Then return here and tap Continue. Requests expire after five minutes. Approve only a connection you started.</p><form method=\"post\" action=\"/consent\"><input type=\"hidden\" name=\"request\" value=\"{{REQUEST}}\"><button type=\"submit\">Continue</button></form></main></html>]]></string>
 </resources>

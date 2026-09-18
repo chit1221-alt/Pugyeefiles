@@ -24,16 +24,20 @@ The tablet does not need Termux or a second file server.
 
 4. Copy the `https://…trycloudflare.com` address from Termux into the app's
    **HTTPS tunnel address** field. Do not append `/mcp` here.
-5. Choose whether the AI may create converted copies, then tap **Start AI
+5. Create a private profile name and a password of at least eight characters.
+   The password is stored only as a salted PBKDF2 hash, not as readable text.
+6. Choose whether the AI may create converted copies, then tap **Start AI
    connection**. Keep the app service and Termux tunnel running.
-6. **Copy MCP address** copies the full URL ending in `/mcp`.
-7. In ChatGPT, enable developer mode if your account/workspace allows it and
+7. **Copy MCP address** copies the full URL ending in `/mcp`.
+8. In ChatGPT, enable developer mode if your account/workspace allows it and
    add a custom MCP connection with this URL and OAuth authentication. Use
    dynamic client registration (DCR); client credentials are not needed.
-8. When the connection page displays a code, open PugyeeFiles on the phone.
+9. Sign in on the PugyeeFiles authorization page with the profile and password
+   from step 5. Only then can a connection request reach the phone.
+10. When the connection page displays a code, open PugyeeFiles on the phone.
    Check the code, client, callback address, and requested access. Tap
    **Approve matching code** only for the connection you started.
-9. Return to the connection page and tap **Continue**. Add the connection to
+11. Return to the connection page and tap **Continue**. Add the connection to
    a chat, then ask it to list the shared folder or read a text file.
 
 The callback approval can be open on the tablet while you approve on the
@@ -43,8 +47,9 @@ Quick Tunnels are for testing and their URL changes on restart. A named
 Cloudflare tunnel with a separate hostname such as `mcp.pugyee.uk` provides
 a stable address. Route **that entire hostname**, including OAuth discovery
 and `/authorize`, `/consent`, `/register`, `/token`, and `/mcp`, to
-`http://127.0.0.1:8787`. Keep an existing WebDAV hostname on its existing
-service. Configure the app with the exact new HTTPS origin.
+`http://127.0.0.1:8787`. Never point the PugyeeFiles MCP hostname at the old
+port-8080 rclone/WebDAV service: that is a separate general file server and is
+not protected by PugyeeFiles. Configure the app with the exact new HTTPS origin.
 
 If cloudflared refuses a Quick Tunnel because it finds an existing config,
 use a separate named MCP hostname; do not overwrite your existing GoLive
@@ -98,10 +103,11 @@ Folder and conversion permissions can only change while hosting is stopped.
 
 OAuth uses PKCE S256, exact registered HTTPS callbacks, resource binding,
 one-minute single-use authorization codes, one-hour access tokens, rotating
-24-hour refresh tokens, issuer identification, and native phone approval.
-No owner password or API key is collected. Loopback-only HTTP requires the
-HTTPS tunnel; Origin and Host are checked. This focused single-owner OAuth
-implementation is not a general identity provider.
+24-hour refresh tokens, issuer identification, password sign-in, and native
+phone approval. The password is kept as a salted PBKDF2 hash and unsuccessful
+sign-ins are rate-limited. Loopback-only HTTP requires the HTTPS tunnel; Host
+and consent Origin are checked. This focused single-owner OAuth implementation
+is not a general identity provider.
 
 ## Development checks
 

@@ -22,6 +22,7 @@ package uk.pugyee.mcp;
 
 import static org.junit.Assert.*;
 
+import com.google.gson.JsonObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,17 +34,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.gson.JsonObject;
 
 public class McpIntegrationTest {
   private static final String ORIGIN = "https://phone.example";
   private static final String REDIRECT = "https://chatgpt.com/connector_platform_oauth_redirect";
   private static final String VERIFIER = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGH";
+  private static final String PROFILE = "Chit";
+  private static final String PASSWORD = "correct horse battery staple";
   private OAuthManager auth;
   private McpHttpServer server;
   private MemoryFiles files;
@@ -58,7 +58,10 @@ public class McpIntegrationTest {
         new McpHttpServer(
             0,
             auth,
+            new OwnerCredentials(PROFILE, OwnerCredentials.hash(PASSWORD)),
             new McpProtocol(files, true),
+            "<form method=\"post\">{{FIELDS}}<i>{{ERROR}}</i>"
+                + "<input name=\"profile\"><input name=\"password\" type=\"password\"></form>",
             "<p>{{CODE}}</p><form>{{REQUEST}}</form><b>{{NAME}}</b>");
     server.start(1000, true);
     Reply registration =
@@ -82,6 +85,7 @@ public class McpIntegrationTest {
 
   @Test
   public void realHttpOAuthInitializeListReadAndConvert() throws Exception {
+    assertEquals(404, request("GET", "/File%20Manager%202B.apk", null, null, null, null).status);
     Reply challenge = rpc(null, "tools/list", "{}");
     assertEquals(401, challenge.status);
     assertTrue(challenge.authenticate.contains("oauth-protected-resource"));
@@ -151,9 +155,16 @@ public class McpIntegrationTest {
 
   @Test
   public void noApprovalMeansNoCodeAndNoTokens() throws Exception {
-    Reply page =
-        request("GET", "/authorize?" + encode(authorization("files.read")), null, null, null, null);
+    Map<String, String> authorization = authorization("files.read");
+    Reply page = request("GET", "/authorize?" + encode(authorization), null, null, null, null);
     assertEquals(200, page.status);
+    assertTrue(page.body.contains("type=\"password\""));
+    assertTrue(auth.pending().isEmpty());
+    Reply wrong = authorize(authorization, "wrong password");
+    assertEquals(401, wrong.status);
+    assertTrue(wrong.body.contains("Incorrect profile name or password"));
+    assertTrue(auth.pending().isEmpty());
+    assertEquals(200, authorize(authorization, PASSWORD).status);
     OAuthManager.Pending pending = auth.pending().get(0);
     Reply waiting =
         request(
@@ -265,10 +276,11 @@ public class McpIntegrationTest {
   }
 
   private String login(String scope) throws Exception {
+    Map<String, String> authorization = authorization(scope);
     assertEquals(
-        200,
-        request("GET", "/authorize?" + encode(authorization(scope)), null, null, null, null)
-            .status);
+        200, request("GET", "/authorize?" + encode(authorization), null, null, null, null).status);
+    assertTrue(auth.pending().isEmpty());
+    assertEquals(200, authorize(authorization, PASSWORD).status);
     OAuthManager.Pending pending = auth.pending().get(0);
     auth.approve(pending.id);
     Reply redirect =
@@ -299,6 +311,14 @@ public class McpIntegrationTest {
         request("POST", "/token", encode(exchange), null, null, "application/x-www-form-urlencoded")
             .status);
     return token.json().get("access_token").getAsString();
+  }
+
+  private Reply authorize(Map<String, String> authorization, String password) throws Exception {
+    Map<String, String> form = new HashMap<>(authorization);
+    form.put("profile", PROFILE);
+    form.put("password", password);
+    return request(
+        "POST", "/authorize", encode(form), null, ORIGIN, "application/x-www-form-urlencoded");
   }
 
   private Map<String, String> authorization(String scope) {

@@ -20,6 +20,9 @@
 
 package uk.pugyee.mcp;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -32,12 +35,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 /** Single-owner authorization. Only the non-exported phone UI can approve a pending request. */
 public final class OAuthManager {
+  private static final String CHATGPT_CLIENT_ID = "ChatGPT";
+  private static final String CHATGPT_CLIENT_NAME = "ChatGPT";
+  private static final String CHATGPT_REDIRECT =
+      "https://chatgpt.com/connector_platform_oauth_redirect";
+
   public interface Clock {
     long now();
   }
@@ -164,9 +168,35 @@ public final class OAuthManager {
     cleanup();
     if (pending.size() >= 20 || codes.size() >= 50 || refresh.size() >= 50)
       throw new IllegalArgumentException("Too many requests");
+    Authorization input = authorization(args);
+    Pending request =
+        new Pending(
+            secret(),
+            input.name,
+            input.redirect,
+            input.clientId,
+            input.challenge,
+            input.state,
+            input.convert,
+            clock.now() + 5 * MINUTE);
+    pending.put(request.id, request);
+    return request;
+  }
+
+  public synchronized void validateAuthorization(Map<String, String> args) {
+    cleanup();
+    authorization(args);
+  }
+
+  private Authorization authorization(Map<String, String> args) {
     String clientId = required(args, "client_id");
     JsonObject client = clients.get(clientId);
     String redirect = required(args, "redirect_uri");
+    if (client == null && CHATGPT_CLIENT_ID.equals(clientId) && CHATGPT_REDIRECT.equals(redirect)) {
+      client = manualChatGptClient();
+      clients.put(clientId, client);
+      storage.save(Json.CODEC.toJson(clients.values()));
+    }
     if (client == null
         || !client.getAsJsonArray("redirect_uris").contains(Json.CODEC.toJsonTree(redirect)))
       throw new IllegalArgumentException("Unregistered redirect");
@@ -188,18 +218,8 @@ public final class OAuthManager {
     }
     if (!read) throw new IllegalArgumentException("Read scope required");
     String state = required(args, "state");
-    Pending request =
-        new Pending(
-            secret(),
-            Json.string(client, "client_name"),
-            redirect,
-            clientId,
-            challenge,
-            state,
-            convert,
-            clock.now() + 5 * MINUTE);
-    pending.put(request.id, request);
-    return request;
+    return new Authorization(
+        Json.string(client, "client_name"), redirect, clientId, challenge, state, convert);
   }
 
   public synchronized List<Pending> pending() {
@@ -314,6 +334,17 @@ public final class OAuthManager {
     return base64url(bytes);
   }
 
+  private static JsonObject manualChatGptClient() {
+    JsonObject result = new JsonObject();
+    result.addProperty("client_id", CHATGPT_CLIENT_ID);
+    result.addProperty("client_name", CHATGPT_CLIENT_NAME);
+    result.add("redirect_uris", Json.CODEC.toJsonTree(new String[] {CHATGPT_REDIRECT}));
+    result.addProperty("token_endpoint_auth_method", "none");
+    result.add("grant_types", Json.parse("[\"authorization_code\",\"refresh_token\"]"));
+    result.add("response_types", Json.parse("[\"code\"]"));
+    return result;
+  }
+
   static String challenge(String verifier) {
     try {
       return base64url(
@@ -388,6 +419,26 @@ public final class OAuthManager {
 
     public String code() {
       return id.substring(0, 8);
+    }
+  }
+
+  private static final class Authorization {
+    final String name, redirect, clientId, challenge, state;
+    final boolean convert;
+
+    Authorization(
+        String name,
+        String redirect,
+        String clientId,
+        String challenge,
+        String state,
+        boolean convert) {
+      this.name = name;
+      this.redirect = redirect;
+      this.clientId = clientId;
+      this.challenge = challenge;
+      this.state = state;
+      this.convert = convert;
     }
   }
 

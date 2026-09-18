@@ -20,6 +20,9 @@
 
 package uk.pugyee.mcp;
 
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+import fi.iki.elonen.NanoHTTPD;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.URI;
@@ -37,25 +40,32 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-
-import fi.iki.elonen.NanoHTTPD;
-
 /** JSON-only Streamable HTTP, bound to loopback for a separately managed HTTPS tunnel. */
 public final class McpHttpServer extends NanoHTTPD {
   public static final int PORT = 8787;
   private static final int MAX_BODY = 65536;
   private final OAuthManager auth;
+  private final OwnerCredentials owner;
   private final McpProtocol protocol;
+  private final String loginTemplate;
   private final String consentTemplate;
   private long rateWindow;
   private int requests;
+  private long loginWindow;
+  private int loginFailures;
 
-  public McpHttpServer(int port, OAuthManager auth, McpProtocol protocol, String consentTemplate) {
+  public McpHttpServer(
+      int port,
+      OAuthManager auth,
+      OwnerCredentials owner,
+      McpProtocol protocol,
+      String loginTemplate,
+      String consentTemplate) {
     super("127.0.0.1", port);
     this.auth = auth;
+    this.owner = owner;
     this.protocol = protocol;
+    this.loginTemplate = loginTemplate;
     this.consentTemplate = consentTemplate;
     setAsyncRunner(new BoundedRunner());
   }
@@ -82,9 +92,25 @@ public final class McpHttpServer extends NanoHTTPD {
         if (path.equals("/health"))
           return json(200, "{\"name\":\"PugyeeFiles\",\"status\":\"running\"}");
         if (path.equals("/authorize")) {
-          OAuthManager.Pending pending = auth.authorize(form(session.getQueryParameterString()));
-          return consent(pending);
+          Map<String, String> arguments = form(session.getQueryParameterString());
+          auth.validateAuthorization(arguments);
+          return login(arguments, false);
         }
+      }
+      if (path.equals("/authorize") && method == Method.POST) {
+        requireType(session, "application/x-www-form-urlencoded");
+        Map<String, String> arguments = form(body(session));
+        String profile = OAuthManager.required(arguments, "profile");
+        String password = OAuthManager.required(arguments, "password");
+        arguments.remove("profile");
+        arguments.remove("password");
+        auth.validateAuthorization(arguments);
+        if (!allowedLoginAttempt()) return json(429, "{\"error\":\"rate_limited\"}");
+        if (!owner.authenticate(profile, password)) {
+          return login(arguments, true);
+        }
+        resetLoginFailures();
+        return consent(auth.authorize(arguments));
       }
       if (path.equals("/register") && method == Method.POST) {
         requireType(session, "application/json");
@@ -178,6 +204,54 @@ public final class McpHttpServer extends NanoHTTPD {
         "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none';"
             + " base-uri 'none'");
     return response;
+  }
+
+  private Response login(Map<String, String> arguments, boolean failed) {
+    StringBuilder fields = new StringBuilder();
+    for (String name :
+        new String[] {
+          "client_id",
+          "redirect_uri",
+          "response_type",
+          "code_challenge_method",
+          "code_challenge",
+          "resource",
+          "scope",
+          "state"
+        }) {
+      String value = arguments.get(name);
+      if (value != null)
+        fields
+            .append("<input type=\"hidden\" name=\"")
+            .append(name)
+            .append("\" value=\"")
+            .append(escape(value))
+            .append("\">");
+    }
+    String page =
+        loginTemplate
+            .replace("{{FIELDS}}", fields.toString())
+            .replace("{{ERROR}}", failed ? "Incorrect profile name or password." : "");
+    Response response = response(failed ? 401 : 200, "text/html; charset=utf-8", page);
+    response.addHeader(
+        "Content-Security-Policy",
+        "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none';"
+            + " base-uri 'none'");
+    return response;
+  }
+
+  private synchronized boolean allowedLoginAttempt() {
+    long now = System.nanoTime();
+    if (now - loginWindow > TimeUnit.MINUTES.toNanos(1)) {
+      loginWindow = now;
+      loginFailures = 0;
+    }
+    return ++loginFailures <= 10;
+  }
+
+  private synchronized void resetLoginFailures() {
+    loginFailures = 0;
+    loginWindow = System.nanoTime();
   }
 
   private static String escape(String text) {

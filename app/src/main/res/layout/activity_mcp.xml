@@ -16,6 +16,14 @@
         <Button android:id="@+id/mcp_copy_command" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_copy_command" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@id/mcp_origin" android:text="@string/mcp_url_label" />
         <EditText android:id="@+id/mcp_origin" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:hint="@string/mcp_url_hint" android:inputType="textUri" android:singleLine="true" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_owner_label" android:textSize="20sp" android:textStyle="bold" android:layout_marginTop="24dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_owner_help" android:textSize="16sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@id/mcp_profile" android:text="@string/mcp_profile_label" />
+        <EditText android:id="@+id/mcp_profile" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:hint="@string/mcp_profile_hint" android:inputType="textPersonName" android:singleLine="true" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@id/mcp_password" android:text="@string/mcp_password_label" />
+        <EditText android:id="@+id/mcp_password" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:hint="@string/mcp_password_hint" android:inputType="textPassword" android:singleLine="true" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@id/mcp_confirm_password" android:text="@string/mcp_confirm_password_label" />
+        <EditText android:id="@+id/mcp_confirm_password" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:hint="@string/mcp_password_hint" android:inputType="textPassword" android:singleLine="true" />
         <CheckBox android:id="@+id/mcp_allow_conversion" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/mcp_allow_conversion" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_access_help" android:textSize="16sp" />
         <Button android:id="@+id/mcp_start" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/mcp_start" />

@@ -20,8 +20,6 @@
 
 package com.amaze.filemanager.pugyee;
 
-import com.amaze.filemanager.R;
-
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -36,13 +34,13 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
-
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
-
+import com.amaze.filemanager.R;
 import uk.pugyee.mcp.McpHttpServer;
 import uk.pugyee.mcp.McpProtocol;
 import uk.pugyee.mcp.OAuthManager;
+import uk.pugyee.mcp.OwnerCredentials;
 
 public final class McpService extends Service {
   public static final String PREFS = "pugyee_mcp";
@@ -110,11 +108,16 @@ public final class McpService extends Service {
               convert,
               prefs.getString("clients", "[]"),
               clients -> prefs.edit().putString("clients", clients).apply());
+      OwnerCredentials owner =
+          new OwnerCredentials(
+              prefs.getString("profile", ""), prefs.getString("password_hash", ""));
       server =
           new McpHttpServer(
               McpHttpServer.PORT,
               auth,
+              owner,
               new McpProtocol(files, convert),
+              getString(R.string.mcp_login_html),
               getString(R.string.mcp_consent_html));
       server.start(5000, true);
       PowerManager power = (PowerManager) getSystemService(POWER_SERVICE);
