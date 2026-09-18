@@ -2,6 +2,14 @@ name: PugyeeFiles Build
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - codex/fix-pugyeefiles-signing
+    paths:
+      - .github/workflows/pugyeefiles-build.yml
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -10,12 +18,52 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: 17
+
+      - name: Prepare and validate release signing
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
+          PUGYEE_KEYSTORE_FILE: ${{ runner.temp }}/pugyeefiles.jks
+        run: |
+          set -euo pipefail
+          umask 077
+          : "${KEYSTORE_B64:?Missing KEYSTORE_B64 secret}"
+          : "${KEYSTORE_ALIAS:?Missing KEYSTORE_ALIAS secret}"
+          : "${KEYSTORE_STORE_PASSWORD:?Missing KEYSTORE_STORE_PASSWORD secret}"
+          : "${KEYSTORE_KEY_PASSWORD:?Missing KEYSTORE_KEY_PASSWORD secret}"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$PUGYEE_KEYSTORE_FILE"
+          keytool -exportcert -keystore "$PUGYEE_KEYSTORE_FILE" \
+            -storepass:env KEYSTORE_STORE_PASSWORD -alias "$KEYSTORE_ALIAS" \
+            -file "$RUNNER_TEMP/pugyeefiles-signing-cert.der"
+          cat > "$RUNNER_TEMP/WriteSigningProperties.java" <<'JAVA'
+          import java.nio.file.Files;
+          import java.nio.file.Path;
+          import java.util.Properties;
+
+          class WriteSigningProperties {
+              public static void main(String[] args) throws Exception {
+                  var props = new Properties();
+                  props.setProperty("STORE_FILE", System.getenv("PUGYEE_KEYSTORE_FILE"));
+                  props.setProperty("STORE_PASSWORD", System.getenv("KEYSTORE_STORE_PASSWORD"));
+                  props.setProperty("KEY_ALIAS", System.getenv("KEYSTORE_ALIAS"));
+                  props.setProperty("KEY_PASSWORD", System.getenv("KEYSTORE_KEY_PASSWORD"));
+                  try (var out = Files.newOutputStream(Path.of("signing.properties"))) {
+                      props.store(out, "Temporary CI release signing");
+                  }
+              }
+          }
+          JAVA
+          java "$RUNNER_TEMP/WriteSigningProperties.java"
 
       - name: Set up NDK r26d
         uses: nttld/setup-ndk@v1
@@ -48,19 +96,6 @@ jobs:
           chmod +x setup_rust_android.sh
           ./setup_rust_android.sh
 
-      - name: Decode keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_B64 }}" | base64 --decode > ${{ github.workspace }}/pugyeefiles.jks
-          echo "Keystore size: $(wc -c < ${{ github.workspace }}/pugyeefiles.jks) bytes"
-
-      - name: Write signing config
-        run: |
-          echo "RELEASE_STORE_FILE=${{ github.workspace }}/pugyeefiles.jks" >> gradle.properties
-          echo "RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_STORE_PASSWORD }}" >> gradle.properties
-          echo "RELEASE_KEY_ALIAS=${{ secrets.KEYSTORE_ALIAS }}" >> gradle.properties
-          echo "RELEASE_KEY_PASSWORD=${{ secrets.KEYSTORE_KEY_PASSWORD }}" >> gradle.properties
-          echo "Signing config written."
-
       - name: Make gradlew executable
         run: chmod +x gradlew
 
@@ -70,9 +105,71 @@ jobs:
       - name: Build signed release APK
         run: ./gradlew assembleFdroidRelease --stacktrace
 
+      - name: Verify release APK signatures
+        run: |
+          set -euo pipefail
+          apksigner_jar="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner.jar | sort -V | tail -n 1)"
+          test -n "$apksigner_jar"
+          cat > "$RUNNER_TEMP/VerifyReleaseApk.java" <<'JAVA'
+          import com.android.apksig.ApkVerifier;
+          import java.io.File;
+          import java.nio.file.Files;
+          import java.nio.file.Path;
+          import java.security.MessageDigest;
+          import java.security.cert.CertificateFactory;
+          import java.util.HexFormat;
+          
+          class VerifyReleaseApk {
+              public static void main(String[] args) throws Exception {
+                  var result = new ApkVerifier.Builder(new File(args[0])).build().verify();
+                  if (!result.isVerified()) {
+                      throw new IllegalStateException("APK signature verification failed: " + result.getErrors());
+                  }
+                  var signers = result.getSignerCertificates();
+                  if (signers.size() != 1) {
+                      throw new IllegalStateException("Expected exactly one APK signer; found " + signers.size());
+                  }
+                  byte[] expected;
+                  try (var input = Files.newInputStream(Path.of(args[1]))) {
+                      expected = CertificateFactory.getInstance("X.509")
+                              .generateCertificate(input).getEncoded();
+                  }
+                  var actual = signers.get(0).getEncoded();
+                  var sha256 = MessageDigest.getInstance("SHA-256");
+                  System.out.println("Configured certificate SHA-256: "
+                          + HexFormat.of().formatHex(sha256.digest(expected)));
+                  System.out.println("APK certificate SHA-256: "
+                          + HexFormat.of().formatHex(sha256.digest(actual)));
+                  if (!MessageDigest.isEqual(expected, actual)) {
+                      throw new IllegalStateException("APK signer does not match the configured release key");
+                  }
+                  System.out.println("Verified release signature: " + new File(args[0]).getName());
+              }
+          }
+          JAVA
+          shopt -s nullglob
+          apks=(app/build/outputs/apk/fdroid/release/*.apk)
+          if (( ${#apks[@]} == 0 )); then
+            echo "::error::No release APK was produced."
+            exit 1
+          fi
+          for apk in "${apks[@]}"; do
+            java -cp "$apksigner_jar" "$RUNNER_TEMP/VerifyReleaseApk.java" \
+              "$apk" "$RUNNER_TEMP/pugyeefiles-signing-cert.der"
+          done
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: PugyeeFiles-release
           path: app/build/outputs/apk/fdroid/release/*.apk
+          if-no-files-found: error
           retention-days: 30
+
+      - name: Remove temporary signing material
+        if: always()
+        run: |
+          rm -f signing.properties "$RUNNER_TEMP/pugyeefiles.jks" \
+            "$RUNNER_TEMP/pugyeefiles-signing-cert.der" \
+            "$RUNNER_TEMP/WriteSigningProperties.java" \
+            "$RUNNER_TEMP/VerifyReleaseApk.java"
