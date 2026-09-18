@@ -232,6 +232,10 @@ public class McpIntegrationTest {
     String oversized = new String(new char[70000]).replace('\0', 'a');
     assertEquals(413, request("POST", "/mcp", oversized, token, null, "application/json").status);
     assertEquals(
+        400,
+        request("POST", "/consent", "request=x", null, null, "application/x-www-form-urlencoded")
+            .status);
+    assertEquals(
         403,
         request(
                 "POST",

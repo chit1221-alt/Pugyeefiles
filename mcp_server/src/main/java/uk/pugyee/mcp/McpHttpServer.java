@@ -100,7 +100,8 @@ public final class McpHttpServer extends NanoHTTPD {
       }
       if (path.equals("/consent") && method == Method.POST) {
         // Consent carries no owner credential. The phone UI must approve this exact random ticket.
-        if (!auth.origin().equals(origin)) return json(403, "{\"error\":\"invalid_origin\"}");
+        if (origin != null && !auth.origin().equals(origin))
+          return json(403, "{\"error\":\"invalid_origin\"}");
         requireType(session, "application/x-www-form-urlencoded");
         String ticket = OAuthManager.required(form(body(session)), "request");
         String redirect = auth.complete(ticket);
